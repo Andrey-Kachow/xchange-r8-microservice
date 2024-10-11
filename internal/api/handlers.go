@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -42,7 +43,9 @@ func RateHandler(writer http.ResponseWriter, request *http.Request) {
 	rateString := strconv.FormatFloat(rate, 'g', 5, 64)
 
 	fmt.Println(rateString)
-	writer.Write([]byte(rateString))
+	json.NewEncoder(writer).Encode(map[string]float64{
+		"rate": rate,
+	})
 }
 
 /*
