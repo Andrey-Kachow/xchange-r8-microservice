@@ -9,15 +9,22 @@ import (
 )
 
 /*
-	Query Parameters:
-		base (required): The base currency (e.g., USD).
-		target (required): The target currency (e.g., EUR).
+Query Parameters:
+
+	base (required): The base currency (e.g., USD).
+	target (required): The target currency (e.g., EUR).
 */
 func RateHandler(writer http.ResponseWriter, request *http.Request) {
 
 	queryParams := request.URL.Query()
-	baseCurrency :=
-	targetCurrency :=
+	baseCurrency := queryParams.Get("base")
+	targetCurrency := queryParams.Get("target")
+
+	if baseCurrency == "" || targetCurrency == "" {
+		fmt.Println("Error: base or target currency is not provided")
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
 
 	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
 	if err != nil {
@@ -25,7 +32,7 @@ func RateHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	rate, err := rateProvider.GetRate("USD", "EUR")
+	rate, err := rateProvider.GetRate(baseCurrency, targetCurrency)
 
 	if err != nil {
 		fmt.Println("Failed to get echange rate from provider:", err)
@@ -39,16 +46,18 @@ func RateHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-	Query Parameters:
-		base (required): The currency to convert from (e.g., USD).
-		target (required): The currency to convert to (e.g., GBP).
-		amount (required): The amount to convert (e.g., 100).
+Query Parameters:
+
+	base (required): The currency to convert from (e.g., USD).
+	target (required): The currency to convert to (e.g., GBP).
+	amount (required): The amount to convert (e.g., 100).
 */
 func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-	Return JSON example
+Return JSON example
+
 	{
 		"base": "USD",
 		"rates": {
@@ -63,12 +72,15 @@ func RatesHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-	Query Parameters:
-		base (required): The base currency (e.g., USD).
-		target (required): The target currency (e.g., CAD).
-		start_date (required): The start date for historical data (e.g., 2023-01-01).
-		end_date (optional): The end date for historical data (e.g., 2023-01-31). If not provided, it will return data up to the current date.
-	Example Return Json:
+Query Parameters:
+
+	base (required): The base currency (e.g., USD).
+	target (required): The target currency (e.g., CAD).
+	start_date (required): The start date for historical data (e.g., 2023-01-01).
+	end_date (optional): The end date for historical data (e.g., 2023-01-31). If not provided, it will return data up to the current date.
+
+Example Return Json:
+
 	{
 		"base": "USD",
 		"target": "CAD",
@@ -83,7 +95,8 @@ func HistoricalHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
-	Return Json:
+Return Json:
+
 	{
 		"currencies": [
 			{"code": "USD", "name": "United States Dollar"},
