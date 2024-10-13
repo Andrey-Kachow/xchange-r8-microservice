@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/app"
 	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/models"
-	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/xchange"
 )
 
 /*
@@ -31,13 +31,7 @@ func RateHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
-	if err != nil {
-		fmt.Println("Failed to create exchange rate provider", err)
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
+	rateProvider := app.GetAppContext().RatesProvider
 	rate, err := rateProvider.GetRate(baseCurrency, targetCurrency)
 
 	if err != nil {
@@ -80,13 +74,7 @@ func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
-	if err != nil {
-		fmt.Println("Failed to create exchange rate provider", err)
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
+	rateProvider := app.GetAppContext().RatesProvider
 	rate, err := rateProvider.GetRate(baseCurrency, targetCurrency)
 	if err != nil {
 		fmt.Println("Failed to get echange rate from provider:", err)
@@ -139,13 +127,7 @@ func RatesHandler(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
-	if err != nil {
-		fmt.Println("Failed to create exchange rate provider", err)
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
+	rateProvider := app.GetAppContext().RatesProvider
 	rates, err := rateProvider.GetRates(baseCurrency, targetCurrencies)
 	if err != nil {
 		fmt.Println("Failed to get echange rates from provider:", err)

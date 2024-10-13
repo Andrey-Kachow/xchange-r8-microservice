@@ -14,7 +14,7 @@ func GetAllSupportedCurrencyList() CurrencyList {
 }
 
 func InitAllSupportedCurrencyList() error {
-	file, err := os.Open("resources/currencies.csv")
+	file, err := os.Open("resources/openexchangerates_org/currencies.csv")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return err

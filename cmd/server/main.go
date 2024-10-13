@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/api"
+	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/app"
 	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/models"
 )
 
@@ -18,6 +19,10 @@ func initApp() {
 	err := models.InitAllSupportedCurrencyList()
 	if err != nil {
 		log.Fatal("Failed to initialize app:", err)
+	}
+	err = app.InitAppContext()
+	if err != nil {
+		log.Fatal("Failed to initialize app Context:", err)
 	}
 }
 
