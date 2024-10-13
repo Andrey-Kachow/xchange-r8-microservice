@@ -14,6 +14,7 @@ Query Parameters:
 
 	base (required): The base currency (e.g., USD).
 	target (required): The target currency (e.g., EUR).
+	return json example: {"target_amount": 123.48}
 */
 func RateHandler(writer http.ResponseWriter, request *http.Request) {
 
@@ -40,9 +41,7 @@ func RateHandler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	rateString := strconv.FormatFloat(rate, 'g', 5, 64)
-
-	fmt.Println(rateString)
+	fmt.Println(rate)
 	json.NewEncoder(writer).Encode(map[string]float64{
 		"rate": rate,
 	})
@@ -56,6 +55,44 @@ Query Parameters:
 	amount (required): The amount to convert (e.g., 100).
 */
 func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
+
+	queryParams := request.URL.Query()
+	baseCurrency := queryParams.Get("base")
+	targetCurrency := queryParams.Get("target")
+	amountString := queryParams.Get("amount")
+
+	if baseCurrency == "" || targetCurrency == "" || amountString == "" {
+		fmt.Println("Error: base or target currency or amount is not provided")
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	amount, err := strconv.Atoi(amountString)
+
+	if err != nil {
+		fmt.Printf("Bad amount parameter: \"%s\"\n", amountString)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
+	if err != nil {
+		fmt.Println("Failed to create exchange rate provider", err)
+		return
+	}
+
+	rate, err := rateProvider.GetRate(baseCurrency, targetCurrency)
+
+	if err != nil {
+		fmt.Println("Failed to get echange rate from provider:", err)
+		return
+	}
+
+	targetAmount := float64(amount) * rate
+	json.NewEncoder(writer).Encode(map[string]float64{
+		"target_amount": targetAmount,
+	})
+
 }
 
 /*
