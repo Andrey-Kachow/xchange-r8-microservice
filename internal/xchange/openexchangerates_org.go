@@ -21,7 +21,7 @@ type OpenExchangeRatesOrgRateProvider struct {
 func CreateOpenExchangeRatesOrgRateProvider() (*OpenExchangeRatesOrgRateProvider, error) {
 	appID := os.Getenv("XCHANGE_R8_OPENEXCHANGERATES_APP_ID")
 	if appID == "" {
-		return nil, errors.New("openxchangerates.org APP ID is empty. Please set XCHANGE_R8_OPENEXCHANGERATES_APP_ID")
+		return nil, errors.New("openexchangerates.org APP ID is empty. Please set XCHANGE_R8_OPENEXCHANGERATES_APP_ID")
 	}
 	provider := OpenExchangeRatesOrgRateProvider{
 		appID: appID,
