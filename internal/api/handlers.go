@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/models"
 	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/xchange"
 )
 
@@ -31,6 +32,7 @@ func RateHandler(writer http.ResponseWriter, request *http.Request) {
 	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
 	if err != nil {
 		fmt.Println("Failed to create exchange rate provider", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
@@ -38,6 +40,7 @@ func RateHandler(writer http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		fmt.Println("Failed to get echange rate from provider:", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
@@ -78,6 +81,7 @@ func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
 	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
 	if err != nil {
 		fmt.Println("Failed to create exchange rate provider", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
@@ -85,6 +89,7 @@ func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		fmt.Println("Failed to get echange rate from provider:", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 
@@ -92,7 +97,6 @@ func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(writer).Encode(map[string]float64{
 		"target_amount": targetAmount,
 	})
-
 }
 
 /*
@@ -147,6 +151,22 @@ Return Json:
 	}
 */
 func CurrenciesHandler(writer http.ResponseWriter, request *http.Request) {
+
+	currencyList, err := models.GetAllSupportedCurrencyList()
+	if err != nil {
+		fmt.Println("Failed to get all the supported currencies resource", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	jsonData, err := json.Marshal(currencyList)
+	if err != nil {
+		fmt.Println("Error converting to JSON:", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	writer.Write(jsonData)
 }
 
 // return Json: { "status": "healthy" }
