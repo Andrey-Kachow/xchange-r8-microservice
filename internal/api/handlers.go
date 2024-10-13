@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/models"
 	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/xchange"
@@ -86,7 +88,6 @@ func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	rate, err := rateProvider.GetRate(baseCurrency, targetCurrency)
-
 	if err != nil {
 		fmt.Println("Failed to get echange rate from provider:", err)
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -100,19 +101,63 @@ func ConvertHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 /*
+Query Parameters:
+
+	base (required): The currency to convert from (e.g., USD).
+	targets (required): The comma separated list of currencies to convert to (e.g., GBP,EUR,JPY).
+
 Return JSON example
 
 	{
-		"base": "USD",
-		"rates": {
-			"EUR": 0.85,
-			"GBP": 0.725,
-			"JPY": 110.15
-		},
-		"timestamp": "2023-09-01T10:00:00Z"
+	    "base": "USD",
+	    "rates": {
+	        "EUR": 0.85,
+	        "GBP": 0.725,
+	        "JPY": 110.15
+	    },
+	    "timestamp": "2023-09-01T10:00:00Z"
 	}
 */
 func RatesHandler(writer http.ResponseWriter, request *http.Request) {
+
+	queryParams := request.URL.Query()
+	baseCurrency := queryParams.Get("base")
+	targetCurrencyList := queryParams.Get("targets")
+
+	if baseCurrency == "" || targetCurrencyList == "" {
+		fmt.Println("Error: base or target currencies is not provided in query parameters")
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	targetCurrencies := strings.Split(targetCurrencyList, ",")
+	for _, targetCurrency := range targetCurrencies {
+		if !models.CurrencyIsSupported(targetCurrency) {
+			fmt.Println("Currency is not supported:", targetCurrency)
+			http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+	}
+
+	rateProvider, err := xchange.CreateOpenExchangeRatesOrgRateProvider()
+	if err != nil {
+		fmt.Println("Failed to create exchange rate provider", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	rates, err := rateProvider.GetRates(baseCurrency, targetCurrencies)
+	if err != nil {
+		fmt.Println("Failed to get echange rates from provider:", err)
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(writer).Encode(map[string]interface{}{
+		"base":      baseCurrency,
+		"rates":     rates,
+		"timestamp": time.Now().Format(time.RFC3339),
+	})
 }
 
 /*
@@ -152,12 +197,7 @@ Return Json:
 */
 func CurrenciesHandler(writer http.ResponseWriter, request *http.Request) {
 
-	currencyList, err := models.GetAllSupportedCurrencyList()
-	if err != nil {
-		fmt.Println("Failed to get all the supported currencies resource", err)
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
+	currencyList := models.GetAllSupportedCurrencyList()
 
 	jsonData, err := json.Marshal(currencyList)
 	if err != nil {
@@ -171,4 +211,10 @@ func CurrenciesHandler(writer http.ResponseWriter, request *http.Request) {
 
 // return Json: { "status": "healthy" }
 func HealthHandler(writer http.ResponseWriter, request *http.Request) {
+	//
+	// TODO: health check
+	//
+	json.NewEncoder(writer).Encode(map[string]string{
+		"status": "healthy",
+	})
 }

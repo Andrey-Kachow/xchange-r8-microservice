@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/api"
+	"github.com/Andrey-Kachow/xchange-r8-microservice/internal/models"
 )
 
 func sampleHandler(writer http.ResponseWriter, request *http.Request) {
@@ -13,12 +14,20 @@ func sampleHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte("<h1>Hello World!</h1>"))
 }
 
+func initApp() {
+	err := models.InitAllSupportedCurrencyList()
+	if err != nil {
+		log.Fatal("Failed to initialize app:", err)
+	}
+}
+
 func main() {
 	fmt.Println("Starting the app")
+	initApp()
 	http.HandleFunc("/", sampleHandler)
 	http.HandleFunc("/rate", api.RateHandler)
 	http.HandleFunc("/convert", api.ConvertHandler)
-	http.HandleFunc("/rates", api.RateHandler)
+	http.HandleFunc("/rates", api.RatesHandler)
 	http.HandleFunc("/historical", api.HistoricalHandler)
 	http.HandleFunc("/currencies", api.CurrenciesHandler)
 	http.HandleFunc("/health", api.HealthHandler)
